@@ -49,8 +49,8 @@ BEGIN
     END
     POPUP "Stock"
     BEGIN
-        MENUITEM "Add",                         ID_STOCK_ADD
-        MENUITEM "Delete",                      ID_STOCK_DELETE
+        MENUITEM "Add Stock",                   ID_STOCK_ADD
+        MENUITEM "Remove Stock",                ID_STOCK_DELETE
     END
     POPUP "&Help"
     BEGIN
@@ -87,6 +87,17 @@ BEGIN
     DEFPUSHBUTTON   "OK",IDOK,113,41,50,14,WS_GROUP
 END
 
+IDADD DIALOGEX 0, 0, 316, 180
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "ADD",IDADDBTN,205,159,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,259,159,50,14
+    LTEXT           "Add New stock :",IDC_STATIC,23,17,61,14
+    EDITTEXT        IDC_EDIT1,124,18,118,14,ES_AUTOHSCROLL
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -102,6 +113,14 @@ BEGIN
         RIGHTMARGIN, 163
         TOPMARGIN, 7
         BOTTOMMARGIN, 55
+    END
+
+    IDADD, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 309
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 173
     END
 END
 #endif    // APSTUDIO_INVOKED

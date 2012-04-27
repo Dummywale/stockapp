@@ -15,7 +15,7 @@ TCHAR szWindowClass[MAX_LOADSTRING];			// the main window class name
 ATOM				MyRegisterClass(HINSTANCE hInstance);
 BOOL				InitInstance(HINSTANCE, int);
 LRESULT CALLBACK	WndProc(HWND, UINT, WPARAM, LPARAM);
-LRESULT CALLBACK	AdddDlgProc(HWND, UINT, WPARAM, LPARAM);
+BOOL CALLBACK	AddDlgProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK	About(HWND, UINT, WPARAM, LPARAM);
 
 int APIENTRY _tWinMain(HINSTANCE hInstance,
@@ -152,6 +152,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		case IDM_EXIT:
 			DestroyWindow(hWnd);
 			break;
+		case ID_STOCK_ADD:
+		    DialogBox(hInst,MAKEINTRESOURCE(IDADD),hWnd,AddDlgProc);
+		    break;
 		default:
 			return DefWindowProc(hWnd, message, wParam, lParam);
 		}
@@ -171,9 +174,24 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 }
 
 //Message Handler for dialogbox
-LRESULT CALLBACK    AddDlgProc (HWND hAddDlg,UINT message,WPARAM wParam,LPARAM lParam)
+BOOL CALLBACK  AddDlgProc (HWND hAddDlg,UINT message,WPARAM wParam,LPARAM lParam)
 {
-
+    
+    switch(message)
+    {
+    case WM_COMMAND : 
+        if(LOWORD(wParam) == IDADDBTN)
+        {
+            MessageBox(NULL,_T("Yo it ll ADD"),_T("Add Stock"),IDYES);
+            EndDialog(hAddDlg,TRUE);
+        }
+        if(LOWORD(wParam) == IDCANCEL)
+        {
+             MessageBox(NULL,_T("Cancel Add"),_T("Cancel Stock"),IDYES);
+            EndDialog(hAddDlg,TRUE);
+        }
+    }
+    return FALSE;
 }
 // Message handler for about box.
 INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
