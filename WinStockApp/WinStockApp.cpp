@@ -174,6 +174,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
+static size_t write_data(void *ptr, size_t size, size_t nmemb, void *data)
+{
+     FILE *writehere = (FILE *)data;
+  return fwrite(ptr, size, nmemb, writehere);
+
+}
 //Message Handler for dialogbox
 BOOL CALLBACK  AddDlgProc (HWND hAddDlg,UINT message,WPARAM wParam,LPARAM lParam)
 {
@@ -190,6 +196,47 @@ BOOL CALLBACK  AddDlgProc (HWND hAddDlg,UINT message,WPARAM wParam,LPARAM lParam
     case WM_COMMAND : 
         if(LOWORD(wParam) == IDADDBTN)
         {
+          CURL *curl;
+          CURLcode res;
+          curl = curl_easy_init();
+          FILE *ftpfile;
+          FILE *respfile;
+          LPWSTR  szBuf;
+          szBuf = (LPWSTR)GlobalAlloc(GMEM_FIXED,sizeof(LPWSTR));
+          LPWSTR szHost;
+          szHost = (LPWSTR)GlobalAlloc(GMEM_FIXED,sizeof(LPWSTR)); 
+         //szHost = L"http://finance.yahoo.com/aq/autoc?query=";
+          //szBuf = NULL;
+         int jk = GetDlgItemText(hAddDlg,IDC_EDIT1, szBuf, sizeof(szBuf));
+        
+        
+       
+              StrCpyW(szHost,L"");
+              StrCatW(szHost, L"http://finance.yahoo.com/aq/autoc?query=");
+              StrCatW(szHost, szBuf);
+              GlobalFree(szBuf);
+              StrCatW(szHost,L"&region=US&lang=en-US&callback=YAHOO.util.ScriptNodeDataSource.callbacks");
+     
+          if(curl)
+          {
+             struct curl_slist *chunk = NULL;
+            //"http://finance.yahoo.com/aq/autoc?query=tata&region=US&lang=en-US&callback=YAHOO.util.ScriptNodeDataSource.callbacks"
+            chunk = curl_slist_append(chunk, "Host: d.yimg.com");
+            chunk = curl_slist_append(chunk, "Accept-Language: en-US,en;q=0.8");
+            chunk = curl_slist_append(chunk, "Accept-Encoding: gzip,deflate,sdch");
+            chunk = curl_slist_append(chunk, "Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.3");
+            curl_easy_setopt(curl,CURLOPT_URL,szHost);
+            GlobalFree(szHost);
+            curl_easy_setopt (curl, CURLOPT_REFERER, "http://finance.yahoo.com/"); 
+            curl_easy_setopt (curl, CURLOPT_USERAGENT, "Mozilla 2003, that coolish version"); 
+            curl_easy_setopt (curl, CURLOPT_HTTPHEADER,chunk);
+            ftpfile = fopen("ftp-list.txt", "wb");
+            curl_easy_setopt(curl, CURLOPT_WRITEDATA,ftpfile); 
+            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &write_data); 
+            res = curl_easy_perform(curl);
+            fclose(ftpfile);
+            curl_easy_cleanup(curl);
+          }
           /*HINTERNET hpage;
  
            // MessageBox(NULL,_T("Yo it ll ADD"),_T("Add Stock"),IDYES);
