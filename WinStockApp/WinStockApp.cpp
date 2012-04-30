@@ -3,6 +3,7 @@
 
 #include "stdafx.h"
 #include "WinStockApp.h"
+ 
 
 #define MAX_LOADSTRING 100
 
@@ -177,13 +178,106 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 BOOL CALLBACK  AddDlgProc (HWND hAddDlg,UINT message,WPARAM wParam,LPARAM lParam)
 {
     
+   /*DWORD dwSize = 0;
+    DWORD dwDownloaded = 0;
+    LPSTR pszOutBuffer;
+    BOOL  bResults = FALSE;
+    HINTERNET  hSession = NULL, 
+             hConnect = NULL,
+             hRequest = NULL;*/
     switch(message)
     {
     case WM_COMMAND : 
         if(LOWORD(wParam) == IDADDBTN)
         {
-            MessageBox(NULL,_T("Yo it ll ADD"),_T("Add Stock"),IDYES);
-            EndDialog(hAddDlg,TRUE);
+          /*HINTERNET hpage;
+ 
+           // MessageBox(NULL,_T("Yo it ll ADD"),_T("Add Stock"),IDYES);
+            // Use WinHttpOpen to obtain a session handle.
+          hSession = WinHttpOpen( L"WinHTTP Example/1.0",  
+                                    WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
+                                    WINHTTP_NO_PROXY_NAME, 
+                                    WINHTTP_NO_PROXY_BYPASS, 0 );
+            // Specify an HTTP server.
+            LPCTSTR lpszServerName;
+            lpszServerName = (LPCTSTR)"www.google.com";
+            INTERNET_PORT nServerPort = INTERNET_DEFAULT_HTTP_PORT;
+            if( hSession )
+              hConnect = WinHttpConnect( hSession, lpszServerName,
+                                         nServerPort, 0 );
+
+            // Create an HTTP request handle.
+            if( hConnect )
+              hRequest = WinHttpOpenRequest( hConnect, L"GET", L"/",
+                                             NULL, WINHTTP_NO_REFERER, 
+                                             WINHTTP_DEFAULT_ACCEPT_TYPES, 
+                                             WINHTTP_FLAG_SECURE );                        
+                                    
+            // Send a request.
+              if( hRequest )
+                bResults = WinHttpSendRequest( hRequest,
+                                               WINHTTP_NO_ADDITIONAL_HEADERS, 0,
+                                               WINHTTP_NO_REQUEST_DATA, 0, 
+                                               0, 0 );
+
+
+              // End the request.
+              if( bResults )
+                bResults = WinHttpReceiveResponse( hRequest, NULL );
+
+              // Keep checking for data until there is nothing left.
+              if( bResults )
+              {
+                do 
+                {
+                  // Check for available data.
+                  dwSize = 0;
+                  if( !WinHttpQueryDataAvailable( hRequest, &dwSize ) )
+                    printf( "Error %u in WinHttpQueryDataAvailable.\n",
+                            GetLastError( ) );
+
+                  // Allocate space for the buffer.
+                  pszOutBuffer = new char[dwSize+1];
+                  if( !pszOutBuffer )
+                  {
+                    printf( "Out of memory\n" );
+                    dwSize=0;
+                  }
+                  else
+                  {
+                    // Read the data.
+                    ZeroMemory( pszOutBuffer, dwSize+1 );
+
+                    if( !WinHttpReadData( hRequest, (LPVOID)pszOutBuffer, 
+                                          dwSize, &dwDownloaded ) )
+                      printf( "Error %u in WinHttpReadData.\n", GetLastError( ) );
+                    else
+                      printf( "%s", pszOutBuffer );
+
+                    // Free the memory allocated to the buffer.
+                    delete [] pszOutBuffer;
+                  }
+                } while( dwSize > 0 );
+              }
+
+
+              // Report any errors.
+              if( !bResults )
+               { printf( "Error %d has occurred.\n", GetLastError( ) );
+               DWORD i = GetLastError();
+                char szTest[10];
+                sprintf_s(szTest, "%d", GetLastError());
+                MessageBox(NULL,LPCWSTR(szTest),_T("Add Stock"),IDYES);
+                
+                }
+
+              // Close any open handles.
+              if( hRequest ) WinHttpCloseHandle( hRequest );
+              if( hConnect ) WinHttpCloseHandle( hConnect );
+              if( hSession ) WinHttpCloseHandle( hSession );*/
+            
+          //  EndDialog(hAddDlg,TRUE);
+          
         }
         if(LOWORD(wParam) == IDCANCEL)
         {
