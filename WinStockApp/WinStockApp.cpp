@@ -3,7 +3,8 @@
 
 #include "stdafx.h"
 #include "WinStockApp.h"
- 
+
+
 
 #define MAX_LOADSTRING 100
 
@@ -20,14 +21,14 @@ BOOL CALLBACK	AddDlgProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK	About(HWND, UINT, WPARAM, LPARAM);
 
 int APIENTRY _tWinMain(HINSTANCE hInstance,
-                     HINSTANCE hPrevInstance,
-                     LPTSTR    lpCmdLine,
-                     int       nCmdShow)
+					   HINSTANCE hPrevInstance,
+					   LPTSTR    lpCmdLine,
+					   int       nCmdShow)
 {
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(lpCmdLine);
 
- 	// TODO: Place code here.
+	// TODO: Place code here.
 	MSG msg;
 	HACCEL hAccelTable;
 
@@ -105,22 +106,22 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 //
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
-   HWND hWnd;
+	HWND hWnd;
 
-   hInst = hInstance; // Store instance handle in our global variable
+	hInst = hInstance; // Store instance handle in our global variable
 
-   hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
+	hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
+		CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
 
-   if (!hWnd)
-   {
-      return FALSE;
-   }
+	if (!hWnd)
+	{
+		return FALSE;
+	}
 
-   ShowWindow(hWnd, nCmdShow);
-   UpdateWindow(hWnd);
+	ShowWindow(hWnd, nCmdShow);
+	UpdateWindow(hWnd);
 
-   return TRUE;
+	return TRUE;
 }
 
 //
@@ -154,8 +155,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			DestroyWindow(hWnd);
 			break;
 		case ID_STOCK_ADD:
-		    DialogBox(hInst,MAKEINTRESOURCE(IDADD),hWnd,AddDlgProc);
-		    break;
+			DialogBox(hInst,MAKEINTRESOURCE(IDADD),hWnd,AddDlgProc);
+			break;
 		default:
 			return DefWindowProc(hWnd, message, wParam, lParam);
 		}
@@ -176,162 +177,74 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 static size_t write_data(void *ptr, size_t size, size_t nmemb, void *data)
 {
-     FILE *writehere = (FILE *)data;
-  return fwrite(ptr, size, nmemb, writehere);
+	FILE *writehere = (FILE *)data;
+	
+	json_char * json;
+	json_value * value;
+	json = (json_char *)ptr;
+	value = json_parse(json);
+
+
+	return fwrite(ptr, size, nmemb, writehere);
 
 }
 //Message Handler for dialogbox
 BOOL CALLBACK  AddDlgProc (HWND hAddDlg,UINT message,WPARAM wParam,LPARAM lParam)
 {
-    
-   /*DWORD dwSize = 0;
-    DWORD dwDownloaded = 0;
-    LPSTR pszOutBuffer;
-    BOOL  bResults = FALSE;
-    HINTERNET  hSession = NULL, 
-             hConnect = NULL,
-             hRequest = NULL;*/
-    switch(message)
-    {
-    case WM_COMMAND : 
-        if(LOWORD(wParam) == IDADDBTN)
-        {
-          CURL *curl;
-          CURLcode res;
-          curl = curl_easy_init();
-          FILE *ftpfile;
-          LPWSTR  szBuf;
-          szBuf = (LPWSTR)GlobalAlloc(GMEM_FIXED,sizeof(LPWSTR) *100);
-          LPWSTR szHost;
-          szHost = (LPWSTR)GlobalAlloc(GMEM_FIXED,sizeof(LPWSTR) * 100); 
-         //szHost = L"http://finance.yahoo.com/aq/autoc?query=";
-          //szBuf = NULL;
-         int jk = GetDlgItemText(hAddDlg,IDC_EDIT1, szBuf, 100);
-         StrCpyW(szHost,L"");
-         StrCatW(szHost, L"http://finance.yahoo.com/aq/autoc?query=");
-         StrCatW(szHost, szBuf);
-         StrCatW(szHost,L"&region=US&lang=en-US&callback=YAHOO.util.ScriptNodeDataSource.callbacks");
-      
-              char *ansistr = (char*)malloc(sizeof(char)*100);
-               WideCharToMultiByte(CP_ACP, 0, (LPWSTR)szHost, -1,ansistr, 1000, NULL, NULL);
-              
-          if(curl)
-          {
-             struct curl_slist *chunk = NULL;
-            //"http://finance.yahoo.com/aq/autoc?query=tata&region=US&lang=en-US&callback=YAHOO.util.ScriptNodeDataSource.callbacks"
-            chunk = curl_slist_append(chunk, "Host: d.yimg.com");
-            chunk = curl_slist_append(chunk, "Accept-Language: en-US,en;q=0.8");
-            chunk = curl_slist_append(chunk, "Accept-Encoding: gzip,deflate,sdch");
-            chunk = curl_slist_append(chunk, "Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.3");
-           curl_easy_setopt(curl,CURLOPT_URL,ansistr);
-           // curl_easy_setopt(curl,CURLOPT_URL,"http://finance.yahoo.com/aq/autoc?query=tata&region=US&lang=en-US&callback=YAHOO.util.ScriptNodeDataSource.callbacks");
-//            GlobalFree(szHost);
-            curl_easy_setopt (curl, CURLOPT_REFERER, "http://finance.yahoo.com/"); 
-            curl_easy_setopt (curl, CURLOPT_USERAGENT, "Mozilla 2003, that coolish version"); 
-            curl_easy_setopt (curl, CURLOPT_HTTPHEADER,chunk);
-            ftpfile = fopen("ftp-list.txt", "wb");
-            curl_easy_setopt(curl, CURLOPT_WRITEDATA,ftpfile); 
-            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &write_data); 
-            res = curl_easy_perform(curl);
-            fclose(ftpfile);
-            curl_easy_cleanup(curl);
-          }
-          /*HINTERNET hpage;
- 
-           // MessageBox(NULL,_T("Yo it ll ADD"),_T("Add Stock"),IDYES);
-            // Use WinHttpOpen to obtain a session handle.
-          hSession = WinHttpOpen( L"WinHTTP Example/1.0",  
-                                    WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
-                                    WINHTTP_NO_PROXY_NAME, 
-                                    WINHTTP_NO_PROXY_BYPASS, 0 );
-            // Specify an HTTP server.
-            LPCTSTR lpszServerName;
-            lpszServerName = (LPCTSTR)"www.google.com";
-            INTERNET_PORT nServerPort = INTERNET_DEFAULT_HTTP_PORT;
-            if( hSession )
-              hConnect = WinHttpConnect( hSession, lpszServerName,
-                                         nServerPort, 0 );
+	switch(message)
+	{
+	case WM_COMMAND : 
+		if(LOWORD(wParam) == IDADDBTN)
+		{
+			CURL *curl;
+			CURLcode res;
+			curl = curl_easy_init();
+			FILE *ftpfile;
+			LPWSTR  szBuf;
+			szBuf = (LPWSTR)GlobalAlloc(GMEM_FIXED,sizeof(LPWSTR) *100);
+			LPWSTR szHost;
+			szHost = (LPWSTR)GlobalAlloc(GMEM_FIXED,sizeof(LPWSTR) * 100); 
 
-            // Create an HTTP request handle.
-            if( hConnect )
-              hRequest = WinHttpOpenRequest( hConnect, L"GET", L"/",
-                                             NULL, WINHTTP_NO_REFERER, 
-                                             WINHTTP_DEFAULT_ACCEPT_TYPES, 
-                                             WINHTTP_FLAG_SECURE );                        
-                                    
-            // Send a request.
-              if( hRequest )
-                bResults = WinHttpSendRequest( hRequest,
-                                               WINHTTP_NO_ADDITIONAL_HEADERS, 0,
-                                               WINHTTP_NO_REQUEST_DATA, 0, 
-                                               0, 0 );
+			int jk = GetDlgItemText(hAddDlg,IDC_EDIT1, szBuf, 100);
+			StrCpyW(szHost,L"");
+			StrCatW(szHost, L"http://finance.yahoo.com/aq/autoc?query=");
+			StrCatW(szHost, szBuf);
+			StrCatW(szHost,L"&region=US&lang=en-US&callback=YAHOO.util.ScriptNodeDataSource.callbacks");
 
+			char *ansistr = (char*)malloc(sizeof(char)*100);
+			WideCharToMultiByte(CP_ACP, 0, (LPWSTR)szHost, -1,ansistr, 1000, NULL, NULL);
 
-              // End the request.
-              if( bResults )
-                bResults = WinHttpReceiveResponse( hRequest, NULL );
+			if(curl)
+			{
+				struct curl_slist *chunk = NULL;
+				//"http://finance.yahoo.com/aq/autoc?query=tata&region=US&lang=en-US&callback=YAHOO.util.ScriptNodeDataSource.callbacks"
+				chunk = curl_slist_append(chunk, "Host: d.yimg.com");
+				chunk = curl_slist_append(chunk, "Accept-Language: en-US,en;q=0.8");
+				chunk = curl_slist_append(chunk, "Accept-Encoding: gzip,deflate,sdch");
+				chunk = curl_slist_append(chunk, "Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.3");
+				curl_easy_setopt(curl,CURLOPT_URL,ansistr);
+				// curl_easy_setopt(curl,CURLOPT_URL,"http://finance.yahoo.com/aq/autoc?query=tata&region=US&lang=en-US&callback=YAHOO.util.ScriptNodeDataSource.callbacks");
+				//            GlobalFree(szHost);
+				curl_easy_setopt (curl, CURLOPT_REFERER, "http://finance.yahoo.com/"); 
+				curl_easy_setopt (curl, CURLOPT_USERAGENT, "Mozilla 2003, that coolish version"); 
+				curl_easy_setopt (curl, CURLOPT_HTTPHEADER,chunk);
+				ftpfile = fopen("ftp-list.txt", "wb");
+				curl_easy_setopt(curl, CURLOPT_WRITEDATA,ftpfile); 
+				curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &write_data); 
+				res = curl_easy_perform(curl);
+				fclose(ftpfile);
+				curl_easy_cleanup(curl);
 
-              // Keep checking for data until there is nothing left.
-              if( bResults )
-              {
-                do 
-                {
-                  // Check for available data.
-                  dwSize = 0;
-                  if( !WinHttpQueryDataAvailable( hRequest, &dwSize ) )
-                    printf( "Error %u in WinHttpQueryDataAvailable.\n",
-                            GetLastError( ) );
+			}         
 
-                  // Allocate space for the buffer.
-                  pszOutBuffer = new char[dwSize+1];
-                  if( !pszOutBuffer )
-                  {
-                    printf( "Out of memory\n" );
-                    dwSize=0;
-                  }
-                  else
-                  {
-                    // Read the data.
-                    ZeroMemory( pszOutBuffer, dwSize+1 );
-
-                    if( !WinHttpReadData( hRequest, (LPVOID)pszOutBuffer, 
-                                          dwSize, &dwDownloaded ) )
-                      printf( "Error %u in WinHttpReadData.\n", GetLastError( ) );
-                    else
-                      printf( "%s", pszOutBuffer );
-
-                    // Free the memory allocated to the buffer.
-                    delete [] pszOutBuffer;
-                  }
-                } while( dwSize > 0 );
-              }
-
-
-              // Report any errors.
-              if( !bResults )
-               { printf( "Error %d has occurred.\n", GetLastError( ) );
-               DWORD i = GetLastError();
-                char szTest[10];
-                sprintf_s(szTest, "%d", GetLastError());
-                MessageBox(NULL,LPCWSTR(szTest),_T("Add Stock"),IDYES);
-                
-                }
-
-              // Close any open handles.
-              if( hRequest ) WinHttpCloseHandle( hRequest );
-              if( hConnect ) WinHttpCloseHandle( hConnect );
-              if( hSession ) WinHttpCloseHandle( hSession );*/
-            
-          //  EndDialog(hAddDlg,TRUE);
-          
-        }
-        if(LOWORD(wParam) == IDCANCEL)
-        {
-             MessageBox(NULL,_T("Cancel Add"),_T("Cancel Stock"),IDYES);
-            EndDialog(hAddDlg,TRUE);
-        }
-    }
-    return FALSE;
+		}
+		if(LOWORD(wParam) == IDCANCEL)
+		{
+			MessageBox(NULL,_T("Cancel Add"),_T("Cancel Stock"),IDYES);
+			EndDialog(hAddDlg,TRUE);
+		}
+	}
+	return FALSE;
 }
 // Message handler for about box.
 INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
