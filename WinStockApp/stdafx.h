@@ -22,4 +22,6 @@
 #include <atlbase.h>
 #include <atlstr.h>
 
+#include "json.h"
+
 // TODO: reference additional headers your program requires here
