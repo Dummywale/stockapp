@@ -200,23 +200,21 @@ BOOL CALLBACK  AddDlgProc (HWND hAddDlg,UINT message,WPARAM wParam,LPARAM lParam
           CURLcode res;
           curl = curl_easy_init();
           FILE *ftpfile;
-          FILE *respfile;
           LPWSTR  szBuf;
-          szBuf = (LPWSTR)GlobalAlloc(GMEM_FIXED,sizeof(LPWSTR));
+          szBuf = (LPWSTR)GlobalAlloc(GMEM_FIXED,sizeof(LPWSTR) *100);
           LPWSTR szHost;
-          szHost = (LPWSTR)GlobalAlloc(GMEM_FIXED,sizeof(LPWSTR)); 
+          szHost = (LPWSTR)GlobalAlloc(GMEM_FIXED,sizeof(LPWSTR) * 100); 
          //szHost = L"http://finance.yahoo.com/aq/autoc?query=";
           //szBuf = NULL;
-         int jk = GetDlgItemText(hAddDlg,IDC_EDIT1, szBuf, sizeof(szBuf));
-        
-        
-       
-              StrCpyW(szHost,L"");
-              StrCatW(szHost, L"http://finance.yahoo.com/aq/autoc?query=");
-              StrCatW(szHost, szBuf);
-              GlobalFree(szBuf);
-              StrCatW(szHost,L"&region=US&lang=en-US&callback=YAHOO.util.ScriptNodeDataSource.callbacks");
-     
+         int jk = GetDlgItemText(hAddDlg,IDC_EDIT1, szBuf, 100);
+         StrCpyW(szHost,L"");
+         StrCatW(szHost, L"http://finance.yahoo.com/aq/autoc?query=");
+         StrCatW(szHost, szBuf);
+         StrCatW(szHost,L"&region=US&lang=en-US&callback=YAHOO.util.ScriptNodeDataSource.callbacks");
+      
+              char *ansistr = (char*)malloc(sizeof(char)*100);
+               WideCharToMultiByte(CP_ACP, 0, (LPWSTR)szHost, -1,ansistr, 1000, NULL, NULL);
+              
           if(curl)
           {
              struct curl_slist *chunk = NULL;
@@ -225,8 +223,9 @@ BOOL CALLBACK  AddDlgProc (HWND hAddDlg,UINT message,WPARAM wParam,LPARAM lParam
             chunk = curl_slist_append(chunk, "Accept-Language: en-US,en;q=0.8");
             chunk = curl_slist_append(chunk, "Accept-Encoding: gzip,deflate,sdch");
             chunk = curl_slist_append(chunk, "Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.3");
-            curl_easy_setopt(curl,CURLOPT_URL,szHost);
-            GlobalFree(szHost);
+           curl_easy_setopt(curl,CURLOPT_URL,ansistr);
+           // curl_easy_setopt(curl,CURLOPT_URL,"http://finance.yahoo.com/aq/autoc?query=tata&region=US&lang=en-US&callback=YAHOO.util.ScriptNodeDataSource.callbacks");
+//            GlobalFree(szHost);
             curl_easy_setopt (curl, CURLOPT_REFERER, "http://finance.yahoo.com/"); 
             curl_easy_setopt (curl, CURLOPT_USERAGENT, "Mozilla 2003, that coolish version"); 
             curl_easy_setopt (curl, CURLOPT_HTTPHEADER,chunk);

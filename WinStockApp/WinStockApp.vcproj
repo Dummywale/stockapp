@@ -42,6 +42,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				AdditionalIncludeDirectories="&quot;D:\My Documents\Downloads\libcurl-7.19.3-win32-ssl-msvc\include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -61,7 +62,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="curllib.lib"
 				LinkIncremental="2"
+				AdditionalLibraryDirectories="&quot;D:\My Documents\Downloads\libcurl-7.19.3-win32-ssl-msvc\lib\Debug&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"
