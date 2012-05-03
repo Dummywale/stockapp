@@ -177,17 +177,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 static size_t write_data(void *ptr, size_t size, size_t nmemb, void *data)
 {
+	const char* from = (const char*) ptr;
+	char *to = (char*) malloc((nmemb*size) - 59);
+	int to_be_read = (int)(nmemb*size) - 43;
+	strcpy(to, "");
+	strncpy(to, from+42, to_be_read);
+	strcat(to, "\0");
 	FILE *writehere = (FILE *)data;
-	
-	json_char * json;
-	json_value * value;
-	json = (json_char *)ptr;
-	value = json_parse(json);
-
-
+	struct json_object *new_obj;
+	new_obj = json_tokener_parse((char*)ptr);
+	new_obj = json_object_object_get(new_obj, "glossary");
 	return fwrite(ptr, size, nmemb, writehere);
-
 }
+
 //Message Handler for dialogbox
 BOOL CALLBACK  AddDlgProc (HWND hAddDlg,UINT message,WPARAM wParam,LPARAM lParam)
 {
@@ -228,7 +230,7 @@ BOOL CALLBACK  AddDlgProc (HWND hAddDlg,UINT message,WPARAM wParam,LPARAM lParam
 				curl_easy_setopt (curl, CURLOPT_REFERER, "http://finance.yahoo.com/"); 
 				curl_easy_setopt (curl, CURLOPT_USERAGENT, "Mozilla 2003, that coolish version"); 
 				curl_easy_setopt (curl, CURLOPT_HTTPHEADER,chunk);
-				ftpfile = fopen("ftp-list.txt", "wb");
+				ftpfile = fopen("JSON-resp.txt", "wb");
 				curl_easy_setopt(curl, CURLOPT_WRITEDATA,ftpfile); 
 				curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &write_data); 
 				res = curl_easy_perform(curl);

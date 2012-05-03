@@ -42,12 +42,12 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;D:\My Documents\Downloads\libcurl-7.19.3-win32-ssl-msvc\include&quot;"
+				AdditionalIncludeDirectories="&quot;C:\Users\iman\Documents\Visual Studio 2008\Projects\WinStockApp\stockapp\WinStockApp\json-c&quot;;&quot;D:\My Documents\Downloads\libcurl-7.19.3-win32-ssl-msvc\include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
-				UsePrecompiledHeader="2"
+				RuntimeLibrary="1"
+				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="4"
 			/>
@@ -62,9 +62,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="curllib.lib"
+				AdditionalDependencies="jsonD.lib curllib.lib curllib_static.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;D:\My Documents\Downloads\libcurl-7.19.3-win32-ssl-msvc\lib\Debug&quot;"
+				AdditionalLibraryDirectories="&quot;D:\My Documents\Downloads\libcurl-7.19.3-win32-ssl-msvc\lib\Debug&quot;;&quot;json-c/Debug&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"
