@@ -185,7 +185,7 @@ static size_t write_data(void *ptr, size_t size, size_t nmemb, void *data)
 	strcat(to, "\0");
 	FILE *writehere = (FILE *)data;
 	struct json_object *new_obj;
-	new_obj = json_tokener_parse((char*)ptr);
+	new_obj = json_tokener_parse(to);
 	new_obj = json_object_object_get(new_obj, "glossary");
 	return fwrite(ptr, size, nmemb, writehere);
 }
