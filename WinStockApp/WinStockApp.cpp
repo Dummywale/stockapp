@@ -177,16 +177,31 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 static size_t write_data(void *ptr, size_t size, size_t nmemb, void *data)
 {
+	FILE *writehere = (FILE *)data;
+	FILE *stocklist = fopen("stocks.txt","ab");
+	char* test = (char*)malloc(100);
+	array_list* results;
 	const char* from = (const char*) ptr;
-	char *to = (char*) malloc((nmemb*size) - 59);
+	struct json_object *new_obj;
+
+	char *to = (char*) malloc((nmemb*size));
 	int to_be_read = (int)(nmemb*size) - 43;
+
 	strcpy(to, "");
 	strncpy(to, from+42, to_be_read);
-	strcat(to, "\0");
-	FILE *writehere = (FILE *)data;
-	struct json_object *new_obj;
+	to[(nmemb*size)-43] = '\0';
+	
 	new_obj = json_tokener_parse(to);
-	new_obj = json_object_object_get(new_obj, "glossary");
+	new_obj = json_object_object_get(new_obj, "ResultSet");
+	new_obj = json_object_object_get(new_obj, "Result");
+	results = json_object_get_array(new_obj);
+	new_obj = (struct json_object *)array_list_get_idx(results, 0);
+	new_obj = json_object_object_get(new_obj, "symbol");
+	strcpy(test, json_object_to_json_string(new_obj));
+	fprintf(stocklist,"%s,",test);
+	fclose(stocklist);	
+	free(test);
+
 	return fwrite(ptr, size, nmemb, writehere);
 }
 
@@ -201,7 +216,7 @@ BOOL CALLBACK  AddDlgProc (HWND hAddDlg,UINT message,WPARAM wParam,LPARAM lParam
 			CURL *curl;
 			CURLcode res;
 			curl = curl_easy_init();
-			FILE *ftpfile;
+			FILE *ftpfile = fopen("JSON-resp.txt", "wb");;
 			LPWSTR  szBuf;
 			szBuf = (LPWSTR)GlobalAlloc(GMEM_FIXED,sizeof(LPWSTR) *100);
 			LPWSTR szHost;
@@ -219,25 +234,23 @@ BOOL CALLBACK  AddDlgProc (HWND hAddDlg,UINT message,WPARAM wParam,LPARAM lParam
 			if(curl)
 			{
 				struct curl_slist *chunk = NULL;
-				//"http://finance.yahoo.com/aq/autoc?query=tata&region=US&lang=en-US&callback=YAHOO.util.ScriptNodeDataSource.callbacks"
+				
 				chunk = curl_slist_append(chunk, "Host: d.yimg.com");
 				chunk = curl_slist_append(chunk, "Accept-Language: en-US,en;q=0.8");
 				chunk = curl_slist_append(chunk, "Accept-Encoding: gzip,deflate,sdch");
 				chunk = curl_slist_append(chunk, "Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.3");
 				curl_easy_setopt(curl,CURLOPT_URL,ansistr);
-				// curl_easy_setopt(curl,CURLOPT_URL,"http://finance.yahoo.com/aq/autoc?query=tata&region=US&lang=en-US&callback=YAHOO.util.ScriptNodeDataSource.callbacks");
-				//            GlobalFree(szHost);
+		
 				curl_easy_setopt (curl, CURLOPT_REFERER, "http://finance.yahoo.com/"); 
 				curl_easy_setopt (curl, CURLOPT_USERAGENT, "Mozilla 2003, that coolish version"); 
-				curl_easy_setopt (curl, CURLOPT_HTTPHEADER,chunk);
-				ftpfile = fopen("JSON-resp.txt", "wb");
-				curl_easy_setopt(curl, CURLOPT_WRITEDATA,ftpfile); 
+				curl_easy_setopt (curl, CURLOPT_HTTPHEADER,chunk);				
+				curl_easy_setopt(curl, CURLOPT_WRITEDATA, ftpfile); 
 				curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &write_data); 
 				res = curl_easy_perform(curl);
-				fclose(ftpfile);
 				curl_easy_cleanup(curl);
-
-			}         
+			}
+			
+			fclose(ftpfile);
 
 		}
 		if(LOWORD(wParam) == IDCANCEL)
