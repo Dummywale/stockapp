@@ -178,11 +178,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 static size_t write_data(void *ptr, size_t size, size_t nmemb, void *data)
 {
 	FILE *writehere = (FILE *)data;
-	FILE *stocklist = fopen("stocks.txt","ab");
+	FILE *stockNicks = fopen("stocks.txt","ab");
 	char* test = (char*)malloc(100);
 	array_list* results;
 	const char* from = (const char*) ptr;
 	struct json_object *new_obj;
+	struct json_object *name_obj, *nick_obj;
 
 	char *to = (char*) malloc((nmemb*size));
 	int to_be_read = (int)(nmemb*size) - 43;
@@ -196,10 +197,10 @@ static size_t write_data(void *ptr, size_t size, size_t nmemb, void *data)
 	new_obj = json_object_object_get(new_obj, "Result");
 	results = json_object_get_array(new_obj);
 	new_obj = (struct json_object *)array_list_get_idx(results, 0);
-	new_obj = json_object_object_get(new_obj, "symbol");
-	strcpy(test, json_object_to_json_string(new_obj));
-	fprintf(stocklist,"%s,",test);
-	fclose(stocklist);	
+	nick_obj = json_object_object_get(new_obj, "symbol");
+	name_obj = json_object_object_get(new_obj, "name");
+	fprintf(stockNicks,"%s~%s|",json_object_to_json_string(name_obj),json_object_to_json_string(nick_obj));
+	fclose(stockNicks);	
 	free(test);
 
 	return fwrite(ptr, size, nmemb, writehere);
