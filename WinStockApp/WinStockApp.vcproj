@@ -42,7 +42,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;C:\Users\iman\Documents\Visual Studio 2008\Projects\WinStockApp\stockapp\WinStockApp\json-c&quot;;&quot;D:\My Documents\Downloads\libcurl-7.19.3-win32-ssl-msvc\include&quot;"
+				AdditionalIncludeDirectories="&quot;../WinStockApp/json-c&quot;;&quot;D:\My Documents\Downloads\libcurl-7.19.3-win32-ssl-msvc\include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
