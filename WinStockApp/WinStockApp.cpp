@@ -12,7 +12,16 @@
 HINSTANCE hInst;								// current instance
 TCHAR szTitle[MAX_LOADSTRING];					// The title bar text
 TCHAR szWindowClass[MAX_LOADSTRING];			// the main window class name
-
+char stockDelims []= "~";
+struct StocksData
+{
+    char *szName;
+    char *szCode;
+    float fPrice; 
+    char *szData;
+};
+StocksData **stockData[100];// = (StocksData *) malloc(100 * sizeof(StocksData )); 
+int count = 0;
 // Forward declarations of functions included in this code module:
 ATOM				MyRegisterClass(HINSTANCE hInstance);
 BOOL				InitInstance(HINSTANCE, int);
@@ -124,6 +133,38 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 	return TRUE;
 }
 
+void getStockInfo(char *szStockCode)
+{
+    CURL *curl;
+    struct curl_slist *chunk = NULL;
+    CURLcode res;
+    curl = curl_easy_init();
+    char *szHostName = (char*)malloc(sizeof(char)*100);
+    strcpy(szHostName,"");
+    strcpy(szHostName,"http://download.finance.yahoo.com/d/quotes.csv?s=");;
+    //char szStock = *stock;  
+    strcat(szHostName,szStockCode);
+    strcat(szHostName,"&f=sl1d1t1c1ohgv&e=.csv");
+    //"http://finance.yahoo.com/aq/autoc?query=tata&region=US&lang=en-US&callback=YAHOO.util.ScriptNodeDataSource.callbacks"
+    chunk = curl_slist_append(chunk, "Host: download.finance.yahoo.com");
+    chunk = curl_slist_append(chunk, "Accept-Language: en-US,en;q=0.8");
+    chunk = curl_slist_append(chunk, "Accept-Encoding: gzip,deflate,sdch");
+    chunk = curl_slist_append(chunk, "Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.3");
+    curl_easy_setopt(curl,CURLOPT_URL,szHostName);
+    curl_easy_setopt (curl, CURLOPT_USERAGENT, "Mozilla 2003, that coolish version"); 
+    curl_easy_setopt (curl, CURLOPT_HTTPHEADER,chunk);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, szStockCode);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA,stockData); 
+    res = curl_easy_perform(curl);
+    curl_easy_cleanup(curl);
+}
+static size_t getStockValue(void *ptr, size_t size, size_t nmemb, void *data)
+{
+    StocksData *strData = (StocksData *)data;
+    strData[count].szData = (char *)ptr;
+	return size * nmemb;
+
+}
 //
 //  FUNCTION: WndProc(HWND, UINT, WPARAM, LPARAM)
 //
@@ -139,9 +180,50 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	int wmId, wmEvent;
 	PAINTSTRUCT ps;
 	HDC hdc;
-
+    FILE *pWatchList; 
+    pWatchList = fopen("stocks.txt","rb");
+    long lSize;
+    char * buffer;
+    size_t result;
 	switch (message)
 	{
+	case WM_CREATE:
+	    
+          if (pWatchList!=NULL) 
+            {
+              fseek (pWatchList , 0 , SEEK_END);
+              lSize = ftell (pWatchList);
+              rewind (pWatchList);
+              // allocate memory to contain the whole file:
+              buffer = (char*) malloc (sizeof(char)*lSize);
+               // copy the file into the buffer:
+              result = fread (buffer,1,lSize,pWatchList);
+              fclose (pWatchList);
+              char *stock = NULL;
+              char *stockDetails = NULL;
+              stock = strtok( buffer, stockDelims );
+              int k = 0;
+              
+              while( stock != NULL ) 
+              {
+                printf( "result is \"%s\"\n", stock );
+                 StocksData *stockData = (StocksData *)malloc(sizeof(StocksData));
+                 stockData[count].szName = stock;
+                 stock = strtok( NULL, stockDelims );
+                 stockData[count].szCode = stock;
+                 getStockInfo(stock);
+                count++;
+                stock = strtok( NULL, stockDelims );
+                
+                //stockDetails =strtok(stockData[count].szData,delims);
+               // stockData[count].szNmae = stockDetails;
+               // stockData[count].szCode = strtok(NULL,delims);
+                
+              
+              }
+              
+             } 
+          break;
 	case WM_COMMAND:
 		wmId    = LOWORD(wParam);
 		wmEvent = HIWORD(wParam);
@@ -161,6 +243,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			return DefWindowProc(hWnd, message, wParam, lParam);
 		}
 		break;
+	
 	case WM_PAINT:
 		hdc = BeginPaint(hWnd, &ps);
 		// TODO: Add any drawing code here...
@@ -199,7 +282,7 @@ static size_t write_data(void *ptr, size_t size, size_t nmemb, void *data)
 	new_obj = (struct json_object *)array_list_get_idx(results, 0);
 	nick_obj = json_object_object_get(new_obj, "symbol");
 	name_obj = json_object_object_get(new_obj, "name");
-	fprintf(stockNicks,"%s~%s|",json_object_to_json_string(name_obj),json_object_to_json_string(nick_obj));
+	fprintf(stockNicks,"%s~%s~",json_object_to_json_string(name_obj),json_object_to_json_string(nick_obj));
 	fclose(stockNicks);	
 	free(test);
 
