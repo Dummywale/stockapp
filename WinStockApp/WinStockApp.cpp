@@ -20,7 +20,8 @@ struct StocksData
     float fPrice; 
     char *szData;
 };
-StocksData **stockData[100];// = (StocksData *) malloc(100 * sizeof(StocksData )); 
+// = (StocksData *) malloc(100 * sizeof(StocksData )); 
+StocksData *stkData[100];
 int count = 0;
 // Forward declarations of functions included in this code module:
 ATOM				MyRegisterClass(HINSTANCE hInstance);
@@ -132,8 +133,14 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
 	return TRUE;
 }
+static size_t getStockValue(void *ptr, size_t size, size_t nmemb, void *data)
+{
+    StocksData *strData = (StocksData *)data;
+    strData[count].szData = (char *)ptr;
+	return size * nmemb;
 
-void getStockInfo(char *szStockCode)
+}
+void getStockInfo()
 {
     CURL *curl;
     struct curl_slist *chunk = NULL;
@@ -143,7 +150,7 @@ void getStockInfo(char *szStockCode)
     strcpy(szHostName,"");
     strcpy(szHostName,"http://download.finance.yahoo.com/d/quotes.csv?s=");;
     //char szStock = *stock;  
-    strcat(szHostName,szStockCode);
+    strcat(szHostName,stkData[count]->szCode);
     strcat(szHostName,"&f=sl1d1t1c1ohgv&e=.csv");
     //"http://finance.yahoo.com/aq/autoc?query=tata&region=US&lang=en-US&callback=YAHOO.util.ScriptNodeDataSource.callbacks"
     chunk = curl_slist_append(chunk, "Host: download.finance.yahoo.com");
@@ -153,18 +160,12 @@ void getStockInfo(char *szStockCode)
     curl_easy_setopt(curl,CURLOPT_URL,szHostName);
     curl_easy_setopt (curl, CURLOPT_USERAGENT, "Mozilla 2003, that coolish version"); 
     curl_easy_setopt (curl, CURLOPT_HTTPHEADER,chunk);
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, szStockCode);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA,stockData); 
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION,&getStockValue);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA,stkData[count]); 
     res = curl_easy_perform(curl);
     curl_easy_cleanup(curl);
 }
-static size_t getStockValue(void *ptr, size_t size, size_t nmemb, void *data)
-{
-    StocksData *strData = (StocksData *)data;
-    strData[count].szData = (char *)ptr;
-	return size * nmemb;
 
-}
 //
 //  FUNCTION: WndProc(HWND, UINT, WPARAM, LPARAM)
 //
@@ -179,7 +180,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	int wmId, wmEvent;
 	PAINTSTRUCT ps;
+	static int  cxChar, cxCaps, cyChar ;
 	HDC hdc;
+	TCHAR       szBuffer [10] ;
+    TEXTMETRIC  tm ;
     FILE *pWatchList; 
     pWatchList = fopen("stocks.txt","rb");
     long lSize;
@@ -188,41 +192,46 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	switch (message)
 	{
 	case WM_CREATE:
-	    
-          if (pWatchList!=NULL) 
+        
+        hdc = GetDC (hWnd) ;
+        GetTextMetrics (hdc, &tm) ;
+        cxChar = tm.tmAveCharWidth ;
+        cxCaps = (tm.tmPitchAndFamily & 1 ? 3 : 2) * cxChar / 2 ;
+        cyChar = tm.tmHeight + tm.tmExternalLeading ;
+        if (pWatchList!=NULL) 
+        {
+            fseek (pWatchList , 0 , SEEK_END);
+            lSize = ftell (pWatchList);
+            rewind (pWatchList);
+            // allocate memory to contain the whole file:
+            buffer = (char*) malloc (sizeof(char)*(lSize-1));
+            // copy the file into the buffer:
+            result = fread (buffer,1,lSize-1,pWatchList);
+            fclose (pWatchList);
+            char *stock = NULL;
+            char *stockDetails = NULL;
+            stock = strtok( buffer, stockDelims );
+            int k = 0;
+
+            while( stock != NULL ) 
             {
-              fseek (pWatchList , 0 , SEEK_END);
-              lSize = ftell (pWatchList);
-              rewind (pWatchList);
-              // allocate memory to contain the whole file:
-              buffer = (char*) malloc (sizeof(char)*lSize);
-               // copy the file into the buffer:
-              result = fread (buffer,1,lSize,pWatchList);
-              fclose (pWatchList);
-              char *stock = NULL;
-              char *stockDetails = NULL;
-              stock = strtok( buffer, stockDelims );
-              int k = 0;
-              
-              while( stock != NULL ) 
-              {
                 printf( "result is \"%s\"\n", stock );
-                 StocksData *stockData = (StocksData *)malloc(sizeof(StocksData));
-                 stockData[count].szName = stock;
-                 stock = strtok( NULL, stockDelims );
-                 stockData[count].szCode = stock;
-                 getStockInfo(stock);
-                count++;
+                stkData[count] = (StocksData *)malloc(sizeof(StocksData));
+                stkData[count]->szName = stock;
                 stock = strtok( NULL, stockDelims );
-                
+                stkData[count]->szCode = stock;
+                getStockInfo();
+                stock = strtok( NULL, stockDelims );
+                count++;
+
                 //stockDetails =strtok(stockData[count].szData,delims);
-               // stockData[count].szNmae = stockDetails;
-               // stockData[count].szCode = strtok(NULL,delims);
-                
-              
-              }
-              
-             } 
+                // stockData[count].szNmae = stockDetails;
+                // stockData[count].szCode = strtok(NULL,delims);
+
+
+            }
+
+        } 
           break;
 	case WM_COMMAND:
 		wmId    = LOWORD(wParam);
@@ -245,10 +254,29 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		break;
 	
 	case WM_PAINT:
-		hdc = BeginPaint(hWnd, &ps);
-		// TODO: Add any drawing code here...
-		EndPaint(hWnd, &ps);
-		break;
+        hdc = BeginPaint(hWnd, &ps);
+        // TODO: Add any drawing code here...
+        //MessageBox(NULL,_T("Cancel Add"),_T("Cancel Stock"),IDYES);
+        for (int i = 0 ; i < count; i++)
+        {
+            
+            
+            TextOut (hdc, 0, cyChar * i,(LPWSTR)stkData[i]->szName,sizeof(stkData[i]->szName)) ;
+
+            TextOut (hdc, 22 * cxCaps, cyChar * i,      
+                 (LPWSTR)stkData[i]->szCode,
+                sizeof(stkData[i]->szCode)) ;
+
+            //SetTextAlign (hdc, TA_RIGHT | TA_TOP) ;
+
+            /*TextOut (hdc, 22 * cxCaps + 40 * cxChar, cyChar * i,
+                (LPWSTR)stkData[i]->szData,
+                 sizeof(stkData[i]->szName)) ;*/
+
+           // SetTextAlign (hdc, TA_LEFT | TA_TOP) ;
+        }
+        EndPaint(hWnd, &ps);
+        break;
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		break;
@@ -262,7 +290,6 @@ static size_t write_data(void *ptr, size_t size, size_t nmemb, void *data)
 {
 	FILE *writehere = (FILE *)data;
 	FILE *stockNicks = fopen("stocks.txt","ab");
-	char* test = (char*)malloc(100);
 	array_list* results;
 	const char* from = (const char*) ptr;
 	struct json_object *new_obj;
@@ -282,11 +309,14 @@ static size_t write_data(void *ptr, size_t size, size_t nmemb, void *data)
 	new_obj = (struct json_object *)array_list_get_idx(results, 0);
 	nick_obj = json_object_object_get(new_obj, "symbol");
 	name_obj = json_object_object_get(new_obj, "name");
-	fprintf(stockNicks,"%s~%s~",json_object_to_json_string(name_obj),json_object_to_json_string(nick_obj));
+	if (stockNicks != NULL)
+	{
+	    fprintf(stockNicks,"%s~%s~",json_object_to_json_string(name_obj),json_object_to_json_string(nick_obj));
+	    
+	    return size*nmemb;
+	}
 	fclose(stockNicks);	
-	free(test);
-
-	return fwrite(ptr, size, nmemb, writehere);
+	return size*nmemb;
 }
 
 //Message Handler for dialogbox
@@ -305,7 +335,6 @@ BOOL CALLBACK  AddDlgProc (HWND hAddDlg,UINT message,WPARAM wParam,LPARAM lParam
 			szBuf = (LPWSTR)GlobalAlloc(GMEM_FIXED,sizeof(LPWSTR) *100);
 			LPWSTR szHost;
 			szHost = (LPWSTR)GlobalAlloc(GMEM_FIXED,sizeof(LPWSTR) * 100); 
-
 			int jk = GetDlgItemText(hAddDlg,IDC_EDIT1, szBuf, 100);
 			StrCpyW(szHost,L"");
 			StrCatW(szHost, L"http://finance.yahoo.com/aq/autoc?query=");
@@ -335,11 +364,15 @@ BOOL CALLBACK  AddDlgProc (HWND hAddDlg,UINT message,WPARAM wParam,LPARAM lParam
 			}
 			
 			fclose(ftpfile);
+			HWND hParentHandle;
+			//hParentHandle = GetParent(hAddDlg);
+			//InvalidateRect(hParentHandle,NULL,false);
+			EndDialog(hAddDlg,TRUE);
 
 		}
 		if(LOWORD(wParam) == IDCANCEL)
 		{
-			MessageBox(NULL,_T("Cancel Add"),_T("Cancel Stock"),IDYES);
+			//MessageBox(NULL,_T("Cancel Add"),_T("Cancel Stock"),IDYES);
 			EndDialog(hAddDlg,TRUE);
 		}
 	}
